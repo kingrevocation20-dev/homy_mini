@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Homy Mini — App Dashboard</title>
+  <style>
+    :root{
+      --bg:#0f1724;
+      --card:#0b1220;
+      --muted:#9aa6b2;
+      --accent:#7cdbff;
+      --glass: rgba(255,255,255,0.03);
+      --radius:12px;
+      font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+      color: #e6eef6;
+    }
+    html,body{height:100%;margin:0;background:linear-gradient(180deg,var(--bg) 0%, #07101a 100%);display:flex;align-items:center;justify-content:center;}
+    .card{width:min(920px,92vw);background:linear-gradient(180deg,var(--card), #07121b);box-shadow:0 8px 30px rgba(2,6,23,0.6);border-radius:var(--radius);padding:24px;display:grid;grid-template-columns:120px 1fr;gap:20px;align-items:start;}
+    .icon-wrap{width:120px;height:120px;border-radius:12px;background:var(--glass);display:flex;align-items:center;justify-content:center;overflow:hidden;border:1px solid rgba(255,255,255,0.03);}
+    .icon-wrap img{max-width:100%;max-height:100%;display:block}
+    h1{margin:0;font-size:20px}
+    .meta{display:flex;flex-direction:column;gap:6px}
+    .meta .line{color:var(--muted);font-size:13px;display:flex;gap:8px;align-items:center}
+    .meta .value{color:var(--accent);font-weight:600}
+    pre{background:rgba(0,0,0,0.08);padding:12px;border-radius:8px;color:#dbe9f5;overflow:auto}
+    .actions{margin-top:12px;display:flex;gap:10px}
+    button{background:linear-gradient(180deg,var(--accent), #3ec7db);border:none;color:#012;padding:8px 12px;border-radius:8px;font-weight:700;cursor:pointer}
+    button.secondary{background:transparent;border:1px solid rgba(255,255,255,0.04);color:var(--muted);font-weight:600}
+    footer{margin-top:18px;color:var(--muted);font-size:12px}
+    @media (max-width:600px){.card{grid-template-columns:1fr;grid-auto-rows:auto}}
+  </style>
+</head>
+<body>
+  <div class="card" role="application" aria-labelledby="app-name">
+    <div class="icon-wrap" id="iconWrap" aria-hidden="false">
+      <img id="appIcon" alt="App icon" src="" />
+    </div>
+
+    <div>
+      <div class="meta">
+        <h1 id="app-name">Homy Mini</h1>
+        <div class="line">Package: <span id="pkg" class="value"></span></div>
+        <div class="line">Web version: <span id="webver" class="value"></span></div>
+        <div class="line">Core version: <span id="corever" class="value"></span></div>
+        <div class="line">Runtime: <span id="runtime" class="value">browser</span></div>
+      </div>
+
+      <div class="actions">
+        <button id="reloadMeta">Reload metadata</button>
+        <button id="showExample" class="secondary">Show example code</button>
+      </div>
+
+      <section style="margin-top:12px">
+        <div style="display:flex;gap:12px;align-items:center;justify-content:space-between">
+          <strong>Example</strong>
+          <span style="color:var(--muted);font-size:12px">A tiny HomyLang snippet</span>
+        </div>
+        <pre id="example" aria-live="polite" style="margin-top:8px">-- click "Show example" --</pre>
+      </section>
+
+      <footer>Open index.html in your browser. These helpers are exposed as global functions:
+        name_app_mini(), web_package_mini(), web_mini_version(), mini_version(), mini_app_icon().</footer>
+    </div>
+  </div>
+
+  <script type="module">
+    import * as web from './src/web.js';
+
+    // Expose to global scope for convenience (matching requested names)
+    window.name_app_mini = web.name_app_mini;
+    window.web_package_mini = web.web_package_mini;
+    window.web_mini_version = web.web_mini_version;
+    window.mini_version = web.mini_version;
+    window.mini_app_icon = web.mini_app_icon;
+
+    const el = {
+      name: document.getElementById('app-name'),
+      pkg: document.getElementById('pkg'),
+      webver: document.getElementById('webver'),
+      corever: document.getElementById('corever'),
+      icon: document.getElementById('appIcon'),
+      example: document.getElementById('example'),
+      reloadBtn: document.getElementById('reloadMeta'),
+      showExampleBtn: document.getElementById('showExample'),
+    };
+
+    function renderMeta() {
+      try {
+        el.name.textContent = name_app_mini();
+        el.pkg.textContent = web_package_mini();
+        el.webver.textContent = web_mini_version();
+        el.corever.textContent = mini_version();
+        const icon = mini_app_icon();
+        // icon can be a data URI or a path
+        el.icon.src = icon;
+      } catch (err) {
+        console.error('Error rendering meta:', err);
+      }
+    }
+
+    renderMeta();
+
+    el.reloadBtn.addEventListener('click', () => {
+      renderMeta();
+      el.reloadBtn.textContent = 'Reloaded';
+      setTimeout(()=> el.reloadBtn.textContent = 'Reload metadata', 900);
+    });
+
+    el.showExampleBtn.addEventListener('click', () => {
+      // Small example HomyLang code (matches the language features)
+      const sample = [
+        'fn greet(name) {',
+        '  return "Hello, " + name;',
+        '}',
+        '',
+        'let x = greet("Web");',
+        'print(x);'
+      ].join('\n');
+      el.example.textContent = sample;
+    });
+  </script>
+</body>
+</html>
