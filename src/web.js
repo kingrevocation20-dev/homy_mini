@@ -10,8 +10,8 @@
 // The module also exports the functions as named exports.
 
 const METADATA = {
-  name: 'Homy Mini',
-  package: 'kingrevocation20-dev/homy',
+  name: 'Homy_Mini',
+  package: 'kingrevocation20-dev/homy_mini',
   webVersion: '0.1.0-web',
   coreVersion: '0.1.0',
 };
