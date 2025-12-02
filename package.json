@@ -1,5 +1,5 @@
 {
-  "name": "homy-lang",
+  "name": "homy_mini",
   "version": "0.1.0",
   "description": "HomyLang — small language prototype that transpiles to JavaScript",
   "main": "src/transpiler.js",
