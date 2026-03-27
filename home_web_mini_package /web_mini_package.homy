@@ -1,0 +1,7 @@
+name_app_mini() 
+web_package_mini() 
+web_mini_version() 
+mini_version() 
+mini_app_icon() 
+call_web_mini() 
+basic_package()web_source 

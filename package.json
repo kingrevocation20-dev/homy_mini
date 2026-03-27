@@ -1,0 +1,17 @@
+{
+  "name": "homy_mini",
+  "version": "0.1.0",
+  "description": "HomyLang — small language prototype that transpiles to JavaScript",
+  "main": "src/transpiler.js",
+  "bin": {
+    "homy": "bin/homy"
+  },
+  "scripts": {
+    "start": "node bin/homy examples/hello.homy",
+    "test": "node test/run-tests.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "license": "MIT"
+}

@@ -1,0 +1,34 @@
+#!/usr/bin/env node
+// Simple CLI: transpile a .homy file to JS and run it via Node's VM
+
+const fs = require('fs');
+const path = require('path');
+const vm = require('vm');
+
+const { parse } = require('../src/parser');
+const { transpile } = require('../src/transpiler');
+
+function runFile(filePath) {
+  const src = fs.readFileSync(filePath, 'utf8');
+  const ast = parse(src);
+  const js = transpile(ast);
+  // Run in a small VM context that includes console
+  const context = { console, require, process, __filename: filePath, __dirname: path.dirname(filePath) };
+  vm.createContext(context);
+  try {
+    vm.runInContext(js, context, { filename: filePath });
+  } catch (err) {
+    console.error('Runtime error:', err);
+  }
+}
+
+function main(argv) {
+  const file = argv[2];
+  if (!file) {
+    console.error('Usage: homy path/to/file.homy');
+    process.exit(2);
+  }
+  runFile(file);
+}
+
+if (require.main === module) main(process.argv);

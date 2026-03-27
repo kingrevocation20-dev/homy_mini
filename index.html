@@ -1,0 +1,208 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Homy Mini — App Dashboard & Playground</title>
+  <style>
+    :root{
+      --bg:#0f1724;
+      --card:#0b1220;
+      --muted:#9aa6b2;
+      --accent:#7cdbff;
+      --glass: rgba(255,255,255,0.03);
+      --radius:12px;
+      font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+      color: #e6eef6;
+    }
+    html,body{height:100%;margin:0;background:linear-gradient(180deg,var(--bg) 0%, #07101a 100%);display:flex;align-items:center;justify-content:center;padding:20px;}
+    .card{width:min(1100px,98vw);background:linear-gradient(180deg,var(--card), #07121b);box-shadow:0 8px 30px rgba(2,6,23,0.6);border-radius:var(--radius);padding:20px;display:grid;grid-template-columns:240px 1fr;gap:20px;align-items:start;}
+    .left{display:flex;flex-direction:column;gap:12px}
+    .icon-wrap{width:120px;height:120px;border-radius:12px;background:var(--glass);display:flex;align-items:center;justify-content:center;overflow:hidden;border:1px solid rgba(255,255,255,0.03);}
+    .icon-wrap img{max-width:100%;max-height:100%;display:block}
+    h1{margin:0;font-size:18px}
+    .meta{display:flex;flex-direction:column;gap:6px}
+    .meta .line{color:var(--muted);font-size:13px;display:flex;gap:8px;align-items:center}
+    .meta .value{color:var(--accent);font-weight:600}
+    .editor{display:flex;flex-direction:column;gap:8px}
+    textarea{width:100%;height:360px;background:#021226;color:#dbe9f5;border-radius:8px;padding:12px;font-family: monospace, ui-monospace; font-size:13px; border:1px solid rgba(255,255,255,0.03); resize:vertical}
+    pre{background:rgba(0,0,0,0.08);padding:12px;border-radius:8px;color:#dbe9f5;overflow:auto;min-height:120px}
+    .controls{display:flex;gap:8px;align-items:center}
+    button{background:linear-gradient(180deg,var(--accent), #3ec7db);border:none;color:#012;padding:8px 12px;border-radius:8px;font-weight:700;cursor:pointer}
+    button.secondary{background:transparent;border:1px solid rgba(255,255,255,0.04);color:var(--muted);font-weight:600}
+    footer{margin-top:10px;color:var(--muted);font-size:12px}
+    .small{font-size:13px;color:var(--muted)}
+    @media (max-width:900px){.card{grid-template-columns:1fr;}}
+  </style>
+</head>
+<body>
+  <div class="card" role="application" aria-labelledby="app-name">
+    <div class="left">
+      <div class="icon-wrap" id="iconWrap" aria-hidden="false">
+        <img id="appIcon" alt="App icon" src="" />
+      </div>
+
+      <div class="meta">
+        <h1 id="app-name">Homy Mini — Playground</h1>
+        <div class="line">Package: <span id="pkg" class="value"></span></div>
+        <div class="line">Web version: <span id="webver" class="value"></span></div>
+        <div class="line">Core version: <span id="corever" class="value"></span></div>
+        <div class="line">Runtime: <span id="runtime" class="value">browser</span></div>
+      </div>
+
+      <div class="small">Quick actions</div>
+      <div class="controls">
+        <button id="runBtn">Run</button>
+        <button id="formatBtn" class="secondary">Show example</button>
+        <button id="clearOut" class="secondary">Clear output</button>
+      </div>
+
+      <footer>This playground transpiles HomyLang to JS in the browser and executes it in a sandboxed iframe.</footer>
+    </div>
+
+    <div>
+      <div class="editor">
+        <label class="small">HomyLang source</label>
+        <textarea id="editor" aria-label="HomyLang editor"></textarea>
+
+        <div style="display:flex;gap:12px;align-items:flex-start;margin-top:8px">
+          <div style="flex:1">
+            <label class="small">Output</label>
+            <pre id="output" aria-live="polite">-- output appears here --</pre>
+          </div>
+          <div style="width:220px">
+            <label class="small">Transpiled JS</label>
+            <pre id="transpiled" style="height:200px;white-space:pre-wrap;overflow:auto">-- transpiled JS --</pre>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import * as web from './src/web.js';
+    import { transpile } from './src/browser/transpiler.mjs';
+
+    // Expose globals for convenience (matching existing names)
+    window.name_app_mini = web.name_app_mini;
+    window.web_package_mini = web.web_package_mini;
+    window.web_mini_version = web.web_mini_version;
+    window.mini_version = web.mini_version;
+    window.mini_app_icon = web.mini_app_icon;
+
+    const el = {
+      name: document.getElementById('app-name'),
+      pkg: document.getElementById('pkg'),
+      webver: document.getElementById('webver'),
+      corever: document.getElementById('corever'),
+      icon: document.getElementById('appIcon'),
+      editor: document.getElementById('editor'),
+      runBtn: document.getElementById('runBtn'),
+      output: document.getElementById('output'),
+      transpiled: document.getElementById('transpiled'),
+      formatBtn: document.getElementById('formatBtn'),
+      clearOut: document.getElementById('clearOut'),
+    };
+
+    function renderMeta() {
+      try {
+        el.name.textContent = name_app_mini();
+        el.pkg.textContent = web_package_mini();
+        el.webver.textContent = web_mini_version();
+        el.corever.textContent = mini_version();
+        const icon = mini_app_icon();
+        el.icon.src = icon;
+      } catch (err) {
+        console.error('Error rendering meta:', err);
+      }
+    }
+    renderMeta();
+
+    // default sample
+    const sample = [
+      'fn greet(name) {',
+      '  return "Hello, " + name;',
+      '}',
+      '',
+      'let x = greet("Browser");',
+      'print(x);'
+    ].join('\n');
+
+    el.editor.value = sample;
+
+    // create sandboxed iframe and return a function to run code in it
+    function runInSandbox(jsCode) {
+      // remove existing iframe if present
+      const existing = document.getElementById('__homy_sandbox');
+      if (existing) existing.remove();
+
+      const iframe = document.createElement('iframe');
+      iframe.id = '__homy_sandbox';
+      iframe.sandbox = 'allow-scripts';
+      iframe.style.display = 'none';
+      document.body.appendChild(iframe);
+
+      // Listen for messages from iframe
+      window.addEventListener('message', function onMsg(e) {
+        if (e.source !== iframe.contentWindow) return;
+        const data = e.data;
+        if (data && data.__homy_console) {
+          el.output.textContent += data.__homy_console + '\n';
+        }
+        if (data && data.__homy_done) {
+          window.removeEventListener('message', onMsg);
+        }
+      });
+
+      // prepare iframe content: override console.log to postMessage to parent
+      const iframeHtml = `
+<!doctype html>
+<html>
+<body>
+<script>
+  (function(){
+    function send(msg){ parent.postMessage({__homy_console: String(msg)}, '*'); }
+    console.log = function(){ try{ send(Array.from(arguments).join(' ')); }catch(e){} };
+    // run transpiled code
+    try {
+      ${jsCode}
+    } catch (err) {
+      console.error('Runtime error:', err);
+    } finally {
+      parent.postMessage({__homy_done: true}, '*');
+    }
+  })();
+<\/script>
+</body>
+</html>
+`.trim();
+
+      // write into iframe
+      iframe.srcdoc = iframeHtml;
+    }
+
+    el.runBtn.addEventListener('click', async () => {
+      el.output.textContent = '';
+      el.transpiled.textContent = '-- transpiling... --';
+      try {
+        const src = el.editor.value;
+        const js = transpile(src);
+        el.transpiled.textContent = js;
+        runInSandbox(js);
+      } catch (err) {
+        el.transpiled.textContent = '';
+        el.output.textContent = 'Error during transpile: ' + err.message;
+        console.error(err);
+      }
+    });
+
+    el.formatBtn.addEventListener('click', () => {
+      el.editor.value = sample;
+    });
+
+    el.clearOut.addEventListener('click', () => {
+      el.output.textContent = '';
+    });
+  </script>
+</body>
+</html>

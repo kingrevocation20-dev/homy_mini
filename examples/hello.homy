@@ -1,0 +1,10 @@
+name_app_mini() 
+web_package_mini() 
+web_mini_version() 
+mini_version() 
+mini_app_icon() 
+. body@
+(style:
+)
+Call: index.html 
+/body
